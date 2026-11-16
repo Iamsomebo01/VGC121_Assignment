@@ -11,8 +11,8 @@ TagManager:
   - Ground
   - Water
   - UI
-  - 
-  - 
+  - grappleLayer
+  - enemy
   - 
   - 
   - 
@@ -46,6 +46,9 @@ TagManager:
     locked: 0
   - name: Player
     uniqueID: 1989976301
+    locked: 0
+  - name: Pickups
+    uniqueID: 1167446661
     locked: 0
   m_RenderingLayers:
   - Default

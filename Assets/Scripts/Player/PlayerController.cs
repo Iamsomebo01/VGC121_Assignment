@@ -1,4 +1,3 @@
-using Unity.VisualScripting;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D), typeof(SpriteRenderer), typeof(Animator))]
@@ -9,7 +8,9 @@ public class PlayerController : MonoBehaviour
     #region Tuneable Parameters
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
+    public int maxJumps = 2;
 
+    private int jumpsRemaining;
     #endregion
 
     #region Ground Check Parameters
@@ -23,7 +24,6 @@ public class PlayerController : MonoBehaviour
         Bounds bounds = bc.bounds;
         return new Vector2(bounds.center.x, bounds.min.y);
     }
-
     #endregion
 
     #region Components References
@@ -31,12 +31,8 @@ public class PlayerController : MonoBehaviour
     private SpriteRenderer sr;
     private BoxCollider2D bc;
     private Animator anim;
-
     #endregion
 
-
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -45,36 +41,55 @@ public class PlayerController : MonoBehaviour
         anim = GetComponent<Animator>();
 
         rb.sleepMode = RigidbodySleepMode2D.NeverSleep;
+
+        // Initialize available jumps
+        jumpsRemaining = maxJumps;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (rb.linearVelocityY <= 0f)
         {
-            isGrounded = Physics2D.OverlapCircle(CalculateGroundCheckPos(), groundCheckRadius, groundLayer);
-        }
+            isGrounded = Physics2D.OverlapCircle(
+                CalculateGroundCheckPos(),
+                groundCheckRadius,
+                groundLayer
+            );
 
+            // Reset jumps when landing
+            if (isGrounded)
+            {
+                jumpsRemaining = maxJumps;
+            }
+        }
 
         float moveX = Input.GetAxisRaw("Horizontal");
         bool jumpPressed = Input.GetButtonDown("Jump");
 
         rb.linearVelocityX = moveX * moveSpeed;
 
-        if (jumpPressed)
-        {
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
-            isGrounded = false;
 
+        if (jumpPressed && jumpsRemaining > 0)
+        {
+            rb.linearVelocityY = 0f;
+
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+
+            jumpsRemaining--;
+
+            isGrounded = false;
         }
+
         if (moveX != 0f)
-        { 
+        {
             SpriteFlip(moveX);
         }
+
         if (Input.GetMouseButtonDown(0))
         {
             anim.SetTrigger("IsAttack");
         }
+
         if (Input.GetMouseButtonDown(1) && Input.GetKey(KeyCode.LeftShift))
         {
             anim.SetTrigger("IsjumpAttack");
@@ -83,8 +98,19 @@ public class PlayerController : MonoBehaviour
         anim.SetBool("isGrounded", isGrounded);
         anim.SetFloat("moveX", Mathf.Abs(moveX));
 
+
     }
 
     void SpriteFlip(float moveX) => sr.flipX = (moveX < 0f);
 
+    public void UnlockGrapple()
+    {
+        GetComponent<GrappleHook>().enabled = true;
+        GrappleHook grapple = GetComponent<GrappleHook>();
+
+        if (grapple != null)
+        {
+            grapple.UnlockGrapple();
+        }
+    }
 }
