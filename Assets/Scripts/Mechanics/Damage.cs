@@ -1,16 +1,17 @@
 using UnityEngine;
 
-public class Damage : MonoBehaviour
+public class DamageDealer : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    [Header("Damage Settings")]
+    public int damage = 10;
 
-    // Update is called once per frame
-    void Update()
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        
+        Life targetLife = other.GetComponent<Life>();
+
+        if (targetLife != null)
+        {
+            targetLife.TakeDamage(damage);
+        }
     }
 }
